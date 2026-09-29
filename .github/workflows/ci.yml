@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # An MCP server is launched by whatever client the user runs, on whatever
+    # machine they run it on, so all three platforms are in scope. Node 20 is
+    # the floor the package declares; 22 is what most clients ship with.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ["20", "22"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci
+      # BUILD BEFORE TYPECHECK is not interchangeable here. Nothing in this
+      # repo needs its own dist/ to typecheck, but keeping the order means a
+      # broken build fails on the build step, where the error is readable,
+      # rather than as a cascade of "implicitly any" that look like type
+      # problems and are not.
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
+
+      # Every first-time user starts with no API key set. That path must end
+      # in a setup message, not a stack trace, so it is asserted rather than
+      # assumed.
+      - name: Fails cleanly, and explains itself, with no API key
+        shell: bash
+        env:
+          LINKPILOT_API_KEY: ""
+        run: |
+          set +e
+          out=$(node dist/bin.js 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+
+          if [ "$code" -eq 0 ]; then
+            echo "FAIL: exited 0 with no API key; a client would think it started."
+            exit 1
+          fi
+          if ! printf '%s' "$out" | grep -q 'LINKPILOT_API_KEY is not set'; then
+            echo "FAIL: no setup message in the output above."
+            exit 1
+          fi
+          if printf '%s' "$out" | grep -qE '    at |node:internal'; then
+            echo "FAIL: leaked a stack trace to the user."
+            exit 1
+          fi
+          echo "ok: clean failure with a usable message"
+
+      # The key must not appear in output on any path, including the failure
+      # ones. This server exists to keep credentials out of logs; leaking one
+      # from its own startup would be the sharpest possible own goal.
+      - name: Never echoes the API key
+        shell: bash
+        env:
+          LINKPILOT_API_KEY: "lp_live_canary0000000000000000000000"
+        run: |
+          set +e
+          out=$(node dist/bin.js 2>&1 & sleep 3; kill %1 2>/dev/null)
+          set -e
+          if printf '%s' "$out" | grep -q 'canary0000'; then
+            echo "FAIL: the API key appeared in the server's own output."
+            exit 1
+          fi
+          echo "ok: key never printed"
+
+      # A malformed key must also be caught up front, with the value withheld.
+      - name: Rejects a malformed key without printing it
+        shell: bash
+        env:
+          LINKPILOT_API_KEY: "sk_wrong_prefix_canary1111"
+        run: |
+          set +e
+          out=$(node dist/bin.js 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+          if [ "$code" -eq 0 ]; then
+            echo "FAIL: accepted a key that is not a LinkPilot key."
+            exit 1
+          fi
+          if printf '%s' "$out" | grep -q 'canary1111'; then
+            echo "FAIL: echoed the rejected key."
+            exit 1
+          fi
+          echo "ok: rejected, value withheld"
