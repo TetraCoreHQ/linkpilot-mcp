@@ -71,8 +71,8 @@ jobs:
       - name: Check the tarballs contain what they claim
         run: |
           set -euo pipefail
-          for pkg in packages/sdk packages/cli; do
-            echo "--- $pkg"
+          for pkg in .; do
+            echo "--- $(node -p 'require("./package.json").name')"
             files=$(cd "$pkg" && npm pack --dry-run --json | node -e "
               const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
               console.log(d[0].files.map(f=>f.path).join('\n'));
@@ -80,6 +80,11 @@ jobs:
             echo "$files"
             echo "$files" | grep -q 'dist/index.js\|dist/bin.js' || { echo 'MISSING BUILD OUTPUT'; exit 1; }
             echo "$files" | grep -q 'README.md' || { echo 'MISSING README'; exit 1; }
+            # The CLI shipped 0.1.0 declaring "license": "MIT" with no licence
+            # text, because npm only auto-includes a LICENSE from the package's
+            # own directory. Caught there by inspecting a PUBLISHED tarball;
+            # caught here before one exists.
+            echo "$files" | grep -q 'LICENSE' || { echo 'MISSING LICENCE TEXT'; exit 1; }
             # A published package must never carry an actual credential FILE.
             #
             # Match on the BASENAME against known credential filenames, not a
