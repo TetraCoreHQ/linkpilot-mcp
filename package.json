@@ -1,6 +1,6 @@
 {
   "name": "@uselinkpilot/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for LinkPilot: short links and end-to-end encrypted one-time secret links, for AI assistants",
   "license": "MIT",
   "type": "module",
@@ -64,5 +64,5 @@
     "agent",
     "claude"
   ],
-  "author": "TetraCore"
+  "author": "TetraCore, LLC."
 }
