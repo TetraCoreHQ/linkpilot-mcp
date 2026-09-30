@@ -1,0 +1,23 @@
+# Smithery configuration: https://smithery.ai/docs/config#smitheryyaml
+#
+# Declares how Smithery launches this server so it can be installed from the
+# registry with one command. The package is on npm, so there is nothing to
+# build here: npx fetches it.
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema for the configuration Smithery collects from the user.
+    type: object
+    required:
+      - linkpilotApiKey
+    properties:
+      linkpilotApiKey:
+        type: string
+        description: >-
+          A LinkPilot API key, created at https://uselinkpilot.com/app/api-keys.
+          Begins with lp_live_. Available on every plan, including Free.
+  commandFunction:
+    # Produces the CLI command that starts the server on stdio.
+    |-
+    config => ({ command: 'npx', args: ['-y', '@uselinkpilot/mcp'], env: { LINKPILOT_API_KEY: config.linkpilotApiKey } })
