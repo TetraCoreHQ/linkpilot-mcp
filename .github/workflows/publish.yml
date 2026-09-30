@@ -51,7 +51,10 @@ on:
 
 permissions:
   contents: read
-  id-token: write # required for npm provenance
+  # Mints the OIDC token used for BOTH npm provenance and MCP registry auth.
+  # The registry proves the io.github.TetraCoreHQ namespace from this token,
+  # so no human login and no stored credential is involved either way.
+  id-token: write
 
 jobs:
   publish:
@@ -148,6 +151,27 @@ jobs:
           }
 
           publish_one .
+
+      # The registry only stores METADATA; it reads the package from npm and
+      # checks that the published package.json carries an mcpName equal to
+      # server.json's name. So this must run after the npm publish above, and
+      # a version that is not on npm yet will fail validation rather than
+      # publish something unresolvable.
+      - name: Install mcp-publisher
+        if: github.event_name == 'push' || inputs.dry_run == false
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher --help >/dev/null
+
+      - name: Validate server.json
+        if: github.event_name == 'push' || inputs.dry_run == false
+        run: ./mcp-publisher validate
+
+      - name: Publish to the MCP registry
+        if: github.event_name == 'push' || inputs.dry_run == false
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
 
       - name: Dry run summary
         if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true

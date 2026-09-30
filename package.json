@@ -1,6 +1,7 @@
 {
   "name": "@uselinkpilot/mcp",
-  "version": "0.1.1",
+  "mcpName": "io.github.TetraCoreHQ/linkpilot-mcp",
+  "version": "0.1.2",
   "description": "MCP server for LinkPilot: short links and end-to-end encrypted one-time secret links, for AI assistants",
   "license": "MIT",
   "type": "module",
