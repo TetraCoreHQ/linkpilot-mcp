@@ -167,11 +167,45 @@ jobs:
         if: github.event_name == 'push' || inputs.dry_run == false
         run: ./mcp-publisher validate
 
+      # The registry resolves the package from npm and refuses a version it
+      # cannot see. npm takes a couple of minutes to make a new version
+      # readable, and these two steps run seconds apart, so without this wait
+      # the registry publish fails on EVERY release. It failed exactly this
+      # way on 0.1.2.
+      - name: Wait for npm to serve the new version
+        if: github.event_name == 'push' || inputs.dry_run == false
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VER=$(node -p "require('./package.json').version")
+          echo "waiting for $NAME@$VER to be readable on npm"
+          for i in $(seq 1 30); do
+            if npm view "$NAME@$VER" version >/dev/null 2>&1; then
+              echo "visible after ~$((i*10))s"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::$NAME@$VER did not become readable on npm within 5 minutes"
+          exit 1
+
       - name: Publish to the MCP registry
         if: github.event_name == 'push' || inputs.dry_run == false
         run: |
           ./mcp-publisher login github-oidc
-          ./mcp-publisher publish
+          # Retry anyway: the wait above proves npm serves the version to THIS
+          # runner, which is not quite the same as the registry's own view of
+          # npm. Anything other than the not-found case fails immediately
+          # rather than being retried into a timeout.
+          for i in 1 2 3 4 5; do
+            out=$(./mcp-publisher publish 2>&1) && { echo "$out"; exit 0; }
+            echo "$out"
+            case "$out" in
+              *"was not found"*) echo "attempt $i: registry cannot see the version yet, retrying"; sleep 20 ;;
+              *) echo "::error::registry publish failed for a reason retrying cannot fix"; exit 1 ;;
+            esac
+          done
+          echo "::error::registry still could not see the npm version after 5 attempts"
+          exit 1
 
       - name: Dry run summary
         if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true
