@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.TetraCoreHQ/linkpilot-mcp",
+  "title": "LinkPilot",
+  "description": "Send a password or API key as a link that opens once. Encrypted client-side, so we cannot read it.",
+  "websiteUrl": "https://uselinkpilot.com/developers",
+  "repository": {
+    "url": "https://github.com/TetraCoreHQ/linkpilot-mcp",
+    "source": "github"
+  },
+  "version": "0.1.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@uselinkpilot/mcp",
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "LINKPILOT_API_KEY",
+          "description": "A LinkPilot API key, created at https://uselinkpilot.com/app/api-keys. Begins with lp_live_. Available on every plan, including Free.",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
