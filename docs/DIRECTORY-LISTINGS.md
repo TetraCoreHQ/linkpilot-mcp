@@ -14,10 +14,13 @@ from a high-authority domain.
 
 Glama already indexes every public MCP repo it can find, so the listing
 appears without asking. `glama.json` is what lets us edit the name and
-description, set an icon, and see usage reports. **Claiming needs a
-maintainer to authenticate on glama.ai as one of the `maintainers` entries**
-— if `TetraCoreHQ` cannot be claimed because it is an organisation rather
-than a user, change it to the personal GitHub handle that owns the repo.
+description, set an icon, and see usage reports.
+
+**`maintainers` takes PERSONAL GitHub usernames, never an organisation
+name**, including for a repo owned by an org. Glama's own instructions say
+`"your-github-username"`, and the claim matches the logged-in user against
+that list. `TetraCoreHQ` was tried first and cannot work: no one can log in
+as an organisation, so the claim button simply does nothing.
 
 ## Still to do, because each needs an account or an auth token
 
