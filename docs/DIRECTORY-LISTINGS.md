@@ -14,10 +14,26 @@ from a high-authority domain.
 
 Glama already indexes every public MCP repo it can find, so the listing
 appears without asking. `glama.json` is what lets us edit the name and
-description, set an icon, and see usage reports. **Claiming needs a
-maintainer to authenticate on glama.ai as one of the `maintainers` entries**
-— if `TetraCoreHQ` cannot be claimed because it is an organisation rather
-than a user, change it to the personal GitHub handle that owns the repo.
+description, set an icon, and see usage reports.
+
+**`maintainers` takes PERSONAL GitHub usernames, never an organisation
+name**, including for a repo owned by an org. Glama's own instructions say
+`"your-github-username"`, and the claim matches the logged-in user against
+that list. `TetraCoreHQ` was tried first and cannot work: no one can log in
+as an organisation, so the claim button simply does nothing.
+
+## The logo
+
+Directories fall back to the GitHub **organisation** avatar, because a
+repository has no avatar of its own. That is why the listing first showed
+the TetraCore mark rather than LinkPilot's.
+
+`icon.png` at the repo root is the LinkPilot brand mark, rendered from the
+same illustration the browser extension ships so every surface uses one
+image. It is the only logo signal a directory can read before a listing is
+claimed. Smithery's documented project layout expects an icon at the root;
+Glama has no icon field in `glama.json`, so **its logo can only be changed
+after claiming the listing**, from Glama's own UI.
 
 ## Still to do, because each needs an account or an auth token
 
