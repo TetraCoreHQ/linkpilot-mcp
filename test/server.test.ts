@@ -142,14 +142,14 @@ describe("create_secret_link: the plaintext must never reach the wire", () => {
     expect(await crypto.decryptPayload(sent, key)).toBe(SECRET);
   });
 
-  it("sends a passphrase only as a hash, and needs both halves to open", async () => {
+  it("sends a passphrase only as a salted verifier, and needs both halves to open", async () => {
     const { calls, call } = await harness(() => ({ status: 201, body: SECRET_RESPONSE }));
     const res = await call("create_secret_link", { secret: SECRET, passphrase: "open sesame" });
 
     const req = calls[0] as Captured;
     expect(req.rawBody).not.toContain("open sesame");
     expect(req.body?.passphrase).toBeUndefined();
-    expect(String(req.body?.passphrase_hash)).toMatch(/^[0-9a-f]{64}$/);
+    expect(String(req.body?.passphrase_hash)).toMatch(/^v2\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}$/);
     expect(String(req.body?.ciphertext).startsWith("v1p.")).toBe(true);
 
     const url = urlIn(res.text);

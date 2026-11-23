@@ -113,7 +113,7 @@ export function createServer(client: LinkPilot): McpServer {
           .string()
           .optional()
           .describe(
-            "Optional second factor, Pro plans only. The recipient must type it to decrypt. " +
+            "Optional second factor on any signed-in plan. The recipient must type it to decrypt. " +
               "Send it over a DIFFERENT channel than the link, or it adds nothing.",
           ),
       },
@@ -350,7 +350,7 @@ export function createServer(client: LinkPilot): McpServer {
           `Secrets: ${me.usage.secrets} active of ${cap(me.limits.max_active_secrets)}`,
           `Domains: ${me.usage.domains} of ${cap(me.limits.max_domains)}`,
           `Passphrase-protected secrets: ${
-            me.limits.secret_passphrase_enabled ? "available" : "a Pro feature, not on this plan"
+            me.limits.secret_passphrase_enabled ? "available" : "not on this plan"
           }`,
           "",
           `Rate limit: ${me.rate_limit.remaining} of ${me.rate_limit.limit_per_hour} left ` +
