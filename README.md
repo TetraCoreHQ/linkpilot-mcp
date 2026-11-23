@@ -115,10 +115,11 @@ it will not nag about those.
 | `secret` | The text to protect. Required. |
 | `expires_in` | `"30m"`, `"2h"`, `"7d"`, or seconds. Optional. |
 | `burn_after_read` | Default true. |
-| `passphrase` | Pro plans. A second factor the recipient must type. |
+| `passphrase` | A second factor the recipient must type. Any signed-in plan. |
 
-A passphrase is mixed into the key *and* sent as a SHA-256 hash, so the server
-can refuse to hand over the ciphertext at all. The passphrase itself is never
+A passphrase is mixed into the key *and* sent as a salted verifier (PBKDF2 then
+HKDF, derived by the SDK), so the server can refuse to hand over the ciphertext
+at all. The passphrase itself is never
 transmitted. Send it over a different channel from the link, or it adds
 nothing.
 
